@@ -1,0 +1,3 @@
+CONFIG_OPENTHREAD_RCP_USB_SERIAL_JTAG=y
+# Disable console output to prevent conflicts with RCP communication
+CONFIG_ESP_CONSOLE_NONE=y

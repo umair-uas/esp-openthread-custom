@@ -1,0 +1,43 @@
+name: Build RCP (H2, C6)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [esp32h2, esp32c6]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup ESP-IDF
+        uses: espressif/setup-esp-idf@v1
+        with:
+          version: v6.0
+          cache: true
+
+      - name: Configure (${{ matrix.target }})
+        shell: bash
+        run: |
+          idf.py --non-interactive -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.ci.rcp_usb" set-target "${{ matrix.target }}"
+
+      - name: Build (${{ matrix.target }})
+        shell: bash
+        run: |
+          idf.py --non-interactive build
+
+      - name: Upload artifacts (${{ matrix.target }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: rcp-${{ matrix.target }}
+          path: |
+            build/esp_ot_rcp.bin
+            build/bootloader/bootloader.bin
+            build/partition_table/partition-table.bin
+          if-no-files-found: error

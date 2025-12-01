@@ -1,0 +1,17 @@
+menu "RGB Status LED"
+
+config RGB_STATUS_LED_ENABLED
+    bool "Enable RGB status LED"
+    default y
+    help
+        Enable an addressable RGB LED (WS2812) for status indications.
+
+config RGB_STATUS_LED_GPIO
+    int "RGB LED GPIO"
+    depends on RGB_STATUS_LED_ENABLED
+    default 8
+    range 0 48
+    help
+        GPIO connected to the addressable RGB LED (WS2812/NeoPixel).
+
+endmenu
