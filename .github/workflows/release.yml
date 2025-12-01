@@ -1,9 +1,13 @@
-name: Build RCP (H2, C6)
+name: Release Binaries
 
 on:
   push:
-  pull_request:
+    tags:
+      - 'v*'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -13,7 +17,6 @@ jobs:
       fail-fast: false
       matrix:
         target: [esp32h2, esp32c6]
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,15 +33,6 @@ jobs:
           . "$IDF_PATH/export.sh"
           idf.py build
 
-      - name: Tool versions
-        if: always()
-        shell: bash
-        run: |
-          . "$IDF_PATH/export.sh" || true
-          idf.py --version || true
-          python3 --version || true
-          cmake --version || true
-
       - name: Upload artifacts (${{ matrix.target }})
         uses: actions/upload-artifact@v4
         with:
@@ -48,3 +42,27 @@ jobs:
             build/bootloader/bootloader.bin
             build/partition_table/partition-table.bin
           if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List artifacts
+        run: |
+          ls -R artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/**/esp_ot_rcp_rgb.bin
+            artifacts/**/bootloader.bin
+            artifacts/**/partition-table.bin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
